@@ -283,3 +283,49 @@ fn main5() {
 *   work with any other type. Let's look at how we continue to refactor this code by turning the
 *   'area' function into an 'area' method defined on our 'Rectangle' type.
 */
+
+/*
+    Method Syntax
+*/
+
+/*
+*   Methods are similar to functions: we declare them with the 'fn' keyword and a name,
+*   they can have parameters and a return value, and they contain some code that's run when
+*   the method is called from somewhere else. Unlike functions, methods are defined within
+*   the context of a struct (or an enum or a trait object, which is covered in Chapter 6 & 17),
+*   and their first parameter is always 'self', which represents the instance of the struct the
+*   method is being called on.
+*/
+
+/*
+    Defining Methods
+*/
+
+/*
+*   Let's change the 'area' function that has a 'Rectangle' instance as a parameter and instead
+*   make an 'area' method defined on the 'Rectangle' struct, as shown below:
+*/
+
+#[derive(Debug)]
+struct Rectangle4 {
+    width: u32,
+    height: u32,
+}
+
+impl Rectangle4 {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+}
+
+fn main6() {
+    let rect1 = Rectangle4 {
+        width: 30,
+        height: 50,
+    };
+
+    println!(
+        "The area of the rectangle is {} square pixels.",
+        rect1.area()
+    );
+}
