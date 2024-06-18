@@ -313,16 +313,21 @@ struct Rectangle4 {
 }
 
 impl Rectangle4 {
+    #[derive(default)]
+    fn default(&self) -> Self {
+        Self {
+            width: 30,
+            height: 50,
+        }
+    }
+
     fn area(&self) -> u32 {
         self.width * self.height
     }
 }
 
 fn main6() {
-    let rect1 = Rectangle4 {
-        width: 30,
-        height: 50,
-    };
+    let rect1 = Rectangle4 { width, height };
 
     println!(
         "The area of the rectangle is {} square pixels.",
