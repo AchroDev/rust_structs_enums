@@ -509,3 +509,30 @@ impl Rectangle {
 *   This function is namespaced by the struct: the '::' syntax is used for both associated functions and namespaces created
 *   by modules. Modules are discussed in Chapter 7.
 */
+
+/*
+    Mutliple impl Blocks
+*/
+
+/*
+*   Each struct is allowed to have mutliple 'impl' blocks. For example, the previous code is equivalent to the code shown below, which
+*   has each method in its own 'impl' block.
+*/
+
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+}
+
+impl Rectangle {
+    fn can_hold(&self, other: &Rectangle) -> bool {
+        self.width > other.width && self.height > other.height
+    }
+}
+
+/*
+*   There's no reason to separate these methods into multiple 'impl' blocks here, but this is valid syntax.
+*   We'll see a case in which mutliple 'impl' blocks are useful in Chapter 10, where we discuss generic types and
+*   traits.
+*/
