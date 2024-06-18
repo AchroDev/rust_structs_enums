@@ -22,7 +22,8 @@
 
 **Table of Contents**
 
-[Structs (Structures)][structs]
+[Structs (Structures)][structs]  
+[Example Program Using Structs][example-structs]  
 
 
 #
@@ -44,6 +45,7 @@
 [license-shield]: https://img.shields.io/github/license/AchroDev/AchroDev.svg?style=for-the-badge
 [license-url]: https://github.com/AchroDev/rust_comments/blob/main/LICENSE.txt
 [structs]: /src/main.rs
+[example-structs]: /src/example.rs
 [structs-enums]: https://rust-book.cs.brown.edu/ch05-00-structs.html
 [rust-url]: https://www.rust-lang.org/
 [rust-book]: https://doc.rust-lang.org/stable/book/
