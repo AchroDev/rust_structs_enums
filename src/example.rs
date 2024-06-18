@@ -402,3 +402,110 @@ fn main7() {
 *   API. We will discuss what public and private are and how to designate a field or method as public or private in
 *   Chapter 7.
 */
+
+/*
+    Methods with More Parameters
+*/
+
+/*
+*   Let's practice using methods by implementing a second method on the 'Rectangle' struct. This time we want
+*   an instance of 'Rectangle' to take another instance of 'Rectangle' and return 'true' if the second
+*   'Rectangle' can fit completely within 'self' (the first 'Rectangle); otherwise, it should return 'false'.
+*   That is, once we've defined the 'can_hold' method, we want to be able to write the program show below:
+*/
+
+struct Rectangle6 {
+    width: u32,
+    height: u32,
+}
+
+fn main8() {
+    let rect1 = Rectangle6 {
+        width: 30,
+        height: 50,
+    };
+
+    let rect2 = Rectangle6 {
+        width: 10,
+        height: 40,
+    };
+
+    let rect3 = Rectangle6 {
+        width: 60,
+        height: 45,
+    };
+
+    println!("Can rect1 hold rect2? {}", rect1.can_hold(&rect2));
+    println!("Can rect1 hold rect3? {}", rect1.can_hold(&rect3));
+}
+
+/*
+*   The expected output would look something like the following because both dimensions of 'rect2' are smaller than the
+*   dimenisions of 'rect1', but 'rect3' is wider than 'rect1':
+
+    Can rect1 hold rect2? true
+    Can rect1 hold rect3? false
+*/
+
+/*
+*   We know we want to define a method, so it will be within the 'impl Rectangle6' block. The method name
+*   will be 'can_hold', and it will take an immutable borrow of another 'Rectangle6' as a parameter. We can
+*   tell what the type of the parameter will be by looking at the code that calls the method:
+*   'rect1.can_hold(&rect2)' passes in '&rect2', which is an immutable borrow to rect2, an instance of 'Rectangle6'.
+*   This makes sense because we only need to read 'rect2' (rather than write, which would mean we'd need a -
+*   - mutable borrow), and we want 'main' to retain ownership of 'rect2' so we can use it again after calling the
+*   'can_hold' method. The return value fo 'can_hold' will be a boolean, and the implementation will check whether
+*   the width and height of 'self' are greater than the width and height of the other 'Rectangle6', respectively.
+*   Let's add the new 'can_hold' method to the 'impl' block shown below:
+*/
+
+impl Rectangle6 {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+
+    fn can_hold(&self, other: Rectangle6) -> bool {
+        self.width > other.width && self.height > other.height
+    }
+}
+
+/*
+*   When we run this code with the 'main' function in the code above it, we'll get our desired output. Methods can take
+*   multiple parameters that we add to the signature after the 'self' parameter, and those parameters work just like
+*   parameters in functions.
+*/
+
+/*
+    Associated Functions
+*/
+
+/*
+*   All functions defined with an 'impl' block are called associated functions because they're associated with
+*   the type named after the 'impl'. We can define assocaited functions as functions that don't have 'self' as their
+*   first parameter (and thus are not methods) because they don't need an instance of the type to work with. We've already
+*   used one function like this: the 'String::from' function that's defined on the 'String' type.
+*
+*   Associate functions that aren't methods are often used for constructors that will return a new instance of the struct.
+*   These are often called 'new', but 'new' isn't a special name and isn't built into the language. For example,
+*   we could choose to provide an associated function named 'square' that would have one dimension parameter and use that
+*   as both width and height, thus making it easier to create a square 'Rectangle' rather than having to specify
+*   the same value twice:
+*/
+
+impl Rectangle {
+    fn sqaure(size: u32) -> Self {
+        Self {
+            width: size,
+            height: size,
+        }
+    }
+}
+
+/*
+*   The 'self' keywords in the return type and in the body of the function are aliases for the type that appears after the
+*   'impl' keyword, which in this case is 'Rectangle'.
+*
+*   To call this associated function, we use the '::' syntax with the struct name; 'let sq = Rectangle::square(3);' is an example.
+*   This function is namespaced by the struct: the '::' syntax is used for both associated functions and namespaces created
+*   by modules. Modules are discussed in Chapter 7.
+*/
