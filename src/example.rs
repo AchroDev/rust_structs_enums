@@ -13,6 +13,8 @@
 *   and calculate the area of the rectange.
 */
 
+use std::{char::REPLACEMENT_CHARACTER, thread::sleep};
+
 fn main() {
     let width1 = 30;
     let height1 = 50;
@@ -535,4 +537,342 @@ impl Rectangle {
 *   There's no reason to separate these methods into multiple 'impl' blocks here, but this is valid syntax.
 *   We'll see a case in which mutliple 'impl' blocks are useful in Chapter 10, where we discuss generic types and
 *   traits.
+*/
+
+/*
+    Method Calls are Syntactic Sugar for Function Calls
+*/
+
+/*
+*   Using the concepts we've discussed so far, we can now see how method calls are syntactic sugar for function
+*   calls. For example, let's say we have a rectangle struct with an 'area' method and a 'set_width' method:
+*/
+
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+
+    fn set_width(&mut self, width: u32) {
+        self.width = width;
+    }
+}
+
+/*
+*   And let's say we have a rectangle 'r'. Then the method calls 'r.area()' and 'r.set_width(2)' are equivalent
+*   to this:
+*/
+
+fn example() {
+    let mut r = Rectangle {
+        width: 1,
+        height: 2,
+    };
+    let area1 = r.area();
+    let area2 = Rectangle::area(&r);
+    assert_eq!(area1, area2);
+
+    r.set_width(2);
+    Rectangle::set_width(&mut r, 2);
+}
+
+/*
+*   The method call 'r.area()' becomes 'Rectangle::area(&r)'. The function name is the associated function
+*   'Rectangle::area'. The function argument is the '&self' parameter. Rust automatically inserts the borrowing operator '&'.
+*
+*   NOTE: If you are familiar with C or C++, you are used to two different syntaxes for method calls: 'r.area()' and
+*   'r->area()'. Rust does not have an equivalent to the arrow operator '->'. Rust will automatically reference and dereference
+*   the method receiver when you use the dot operator.
+*
+*   The method call 'r.set_width(2)' similarly becomes 'Rectangle::set_width(&mut r, 2)'. This method expects
+*   '&mut self', so the first argument is a mutable borrow '&mut r'. The second argument is exactly the same, the number 2.
+*
+*   As described in Chapter 4.3 "Dereferencing a Pointer Accessses Its Data", Rust will insert as many references and derefences
+*   as needed to make the types match up for the 'self' parameter. For example, here are two equivalent calls to 'area'
+*   for a mutable reference to a boxed rectangle:
+*/
+
+fn example_again() {
+    let r = &mut Box::new(Rectangle {
+        width: 1,
+        height: 2,
+    });
+
+    let area1 = r.area();
+    let area2 = Rectangle::area(&**r);
+    assert_eq!(area1, area2);
+}
+
+/*
+*   Rust will add two deferences (once for the mutable reference, once for the box) and then one immutable borrow
+*   because 'area' expects '&Rectangle'. Note that this is also a situation where a mutable reference is "downgraded" into
+*   a shared reference, like discussed in Chapter 4.2. Conversely, you would not be allowed to call 'set_width' on a value type
+*   '&Rectangle' or '&Box<Rectangle>'.
+*/
+
+/*
+    Methods and Ownership
+*/
+
+/*
+*   Like discussed in Chapter 4.2 "References and Borrowing", methods must be called on structs that have the
+*   necessary permissions. As a running example, we will use these three methods that take '&self', '&mut self', and
+*   'self', respectively.
+*/
+
+impl Rectangle {
+    fn area(&self) -> u32 {
+        self.width * self.height
+    }
+
+    fn set_width(&mut self, width: u32) {
+        self.width = width;
+    }
+
+    fn max(self, other: Rectangle) -> Rectangle {
+        Rectangle {
+            width: self.width.max(other.width),
+            height: self.height.max(other.height),
+        }
+    }
+}
+
+/*
+    Reads and Writes with &self and &mut self
+*/
+
+/*
+*   If we make an owned rectangle with 'let rect = Rectangle { ... }', then 'rect' has R and O permissions.
+*   With those permissions, it is permissable to call the 'area' and 'max' methods.
+*/
+
+fn another_example() {
+    let rect = Rectangle {
+        width: 0,
+        height: 0,
+    };
+
+    println!("{}", rect.area()); //Rect has R (read) permissions
+
+    let other_rect = Rectangle {
+        width: 1,
+        height: 1,
+    };
+
+    let max_rect = rect.max(other_rect);
+}
+
+/*
+*   However, if we try to call 'set_width', we are missing the W permission:
+*/
+
+fn another_example2() {
+    let rect = Rectangle {
+        width: 0,
+        height: 0,
+    };
+
+    rect.set_width(0); // rect has R (read), but not W (write) permissions
+                       // Therefore this is rejected with:
+                       // error[E0596]: cannot borrow `rect` as mutable, as it is not declared as mutable
+}
+
+/*
+*   We will get a similar error if we try to call 'set_width' on an immutable reference to a 'Rectangle', even if
+*   the underlying rectangle is mutable:
+*/
+
+fn another_example3() {
+    // Added the mut keyword to the let-binding
+    let mut rect = Rectangle {
+        width: 0,
+        height: 0,
+    };
+
+    rect.set_width(1); // Now rect. has the R and W permissions as expected.
+
+    let rect_ref = &rect;
+
+    rect_ref.set_width(2); // This is still not okay to perform after the immutable borrow
+}
+
+/*
+    Moves with self
+*/
+
+/*
+*   Calling a method that expects 'self' will move the input struct (unless the struct implements 'copy'). For example,
+*   we cannot use a 'Rectangle' after passing it to 'max':
+*/
+
+fn another_example4() {
+    let rect = Rectangle {
+        width: 0,
+        height: 0,
+    };
+
+    let other_rect = Rectangle {
+        width: 1,
+        height: 1,
+    };
+
+    let max_rect = rect.max(other_rect);
+
+    println!("{}", rect.area()); // Missing Read permission due to the immutable copy of self
+}
+
+/*
+*   Once we call 'rect.max(..)', we move 'rect' and so lose all permissions on it. Trying to compile this program
+*   would give us the following error:
+*
+*   error[E0382]: borrow of moved value: 'rect'
+*/
+
+/*
+*   A similar situation arises if we try to call a 'self' method on a reference. For instance, say we tried to make
+*   a method 'set_to_max' that assigns 'self' to the output of 'self.max(..)':
+*/
+
+impl Rectangle {
+    fn set_to_max(&mut self, other: Rectangle) {
+        self = self.max(other); // Missing O (own) permission
+    }
+}
+
+/*
+*   Then we can see that 'self' is missing O permissions in the operation 'self.max(..)'. Rust therefore rejects this program
+*   with the following error:
+*
+*   error[E0507]: cannot move out of '*self' which is behind a mutable reference
+*/
+
+/*
+*   This is the same kind of error discussed in Chapter 4.3 "Copying vs. Moving Out of a Collection".
+*/
+
+/*
+    Good Moves and Bad Moves
+*/
+
+/*
+*   You might wonder: why does it matter if we move out of '*self'? In fact, for the case of 'Rectangle', it
+*   actually is safe to move out of '*self', even though Rust doesn't let you do it. For example, if we simulate
+*   a program that calls the rejected 'set_to_max', you can see how nothing unsafe occurs:
+*/
+
+impl Rectangle {
+    fn set_to_max(&mut self, other: Rectangle) {
+        let max = self.max(other);
+        *self = max;
+    }
+}
+
+fn example_main() {
+    let mut rect = Rectangle {
+        width: 0,
+        height: 1,
+    };
+    let other_rect = Rectanlge {
+        width: 1,
+        height: 0,
+    };
+    rect.set_to_max(other_rect);
+}
+
+/*
+*   The reason it's safe to move out of '*self' is because 'Rectangle' does not own any heap data. In fact, we can actually
+*   get Rust to compile 'set_to_max" by simply adding '#[derive(Copy, Clone)] to the definition of 'Rectangle':
+*/
+
+#[derive(Copy, Clone)]
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+
+impl Rectangle {
+    fn set_to_max(&mut self, other: Rectangle) {
+        *self = self.max(other);
+    }
+}
+
+/*
+*   Notice that unlike before, 'self.max(other)' no longer requires the O permission on '*self' or 'other'.
+*   Remember that 'self.max(other)' desugars to 'Rectangle::max(*self, other). The dereference '*self' does not require
+*   ownership over '*self' if 'Rectangle' is copyable.
+*
+*   You might wonder: why doesn't Rust automatically derive 'Copy' for 'Rectangle'? Rust does not auto-derive 'Copy'
+*   for stability across API changes. Imagine that the author of the 'Rectangle' type decided to add a 'name: String' field.
+*   Then all client code that relies on 'Rectangle' being 'Copy' would suddenly get rejected by the compiler. To avoid
+*   that issue, APi authors must explicitly add '#[derive(Copy)]' to indicate that they expect their struct to always be 'Copy'.
+*
+*   To better understand the issue, let's run a simulation. Say we added 'name: String' to 'Rectangle'. What would
+*   happen if Rust allowed 'set_to_max' to compile?
+*/
+
+struct Rectangle {
+    width: u32,
+    height: u32,
+    name: String,
+}
+
+impl Rectangle {
+    fn max(self, other: Self) -> Self {
+        let w = self.width.max(other.width);
+        let h = self.height.max(other.height);
+        Rectangle {
+            width: w,
+            height: h,
+            name: String::from("max"),
+        }
+    }
+    fn set_to_max(&mut self, other: Rectangle) {
+        let max = self.max(other);
+        drop(*self); // This is usually implicit,
+                     // but added here for clarity.
+        *self = max;
+    }
+}
+
+fn main() {
+    let mut r1 = Rectangle {
+        width: 9,
+        height: 9,
+        name: String::from("r1"),
+    };
+    let r2 = Rectangle {
+        width: 16,
+        height: 16,
+        name: String::from("r2"),
+    };
+    r1.set_to_max(r2);
+}
+
+/*
+*   In this program, we call 'set_to_max' with two rectangles 'r1' and 'r2'. 'self' is a mutable reference to
+*   'r1' and 'other' is a move of 'r2'. After calling 'self.max(other)', the 'max' method consumes ownership of
+*   both rectangles. When 'max' returns, Rust deallocates both strings "r1" and "r2" in the heap. Notice the problem:
+*   at the location L2, '*self' is supposed to be readable and writable. However, '(*self).name' (actually 'r1.name')
+*   has been deallocated.
+*
+*   Therefore when we do '*self = max', we encounter undefined behavior. When we overwrite '*self', Rust will
+*   implicitly drop the data previously in '*self'. To make that behavior explicit, we have added 'drop(*self)'.
+*   After calling 'drop(*self)', Rust attempts to free '(*self).name' a second time. That action is a double-free, which
+*   is undefined behavior.
+*
+*   So remember: when you see an error like "cannot move out of '*self'", that's usually because you're trying to
+*   call a 'self' method on a reference like '&self' or '&mut self'. Rust is protecting you from a double-free.
+*/
+
+/*
+    Summary
+*/
+
+/*
+*   Structs let you create custom types that are meaningful for your domain. By using structs, you can keep
+*   associated pieces of data connected to each other and name each piece to make your code clear. In 'impl'
+*   blocks, you can define functions that are associated with your type, and methods are a kind of associated
+*   function that let you specify the behavior that instances of your structs have.
+*
+*   But structs aren't the only way you can create custom types: Next is Enums!
 */
