@@ -1,4 +1,6 @@
 pub mod example;
+pub mod enums_and_patterns;
+
 
 /*
 *   A struct, or structure, is a custom data type that lets you package together and name
