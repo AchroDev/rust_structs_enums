@@ -24,11 +24,12 @@
 
 [Structs (Structures)][structs]  
 [Example Program Using Structs][example-structs]  
-
+[Enums (Enumerations)][enums]
 
 #
 
 ## Specific Book Chapter
+
 [Using Structs to Structure Related Data][structs-enums]
 
 <!-- ACKNOWLEDGEMENTS -->
@@ -47,6 +48,7 @@
 [structs]: /src/main.rs
 [example-structs]: /src/example.rs
 [structs-enums]: https://rust-book.cs.brown.edu/ch05-00-structs.html
+[enums]: /src/enums_and_patterns.rs
 [rust-url]: https://www.rust-lang.org/
 [rust-book]: https://doc.rust-lang.org/stable/book/
 [rust-book-brown]: https://rust-book.cs.brown.edu/
