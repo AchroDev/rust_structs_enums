@@ -30,7 +30,7 @@
 
 ## Specific Book Chapter
 
-[Using Structs to Structure Related Data][structs-enums]
+[Using Structs to Structure Related Data][structs-enums]  
 [Enums and Pattern Matching][enums-patterns]
 
 <!-- ACKNOWLEDGEMENTS -->
